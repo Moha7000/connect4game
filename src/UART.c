@@ -1,16 +1,18 @@
 // UART.c
 // Runs on LM3S811, LM3S1968, LM3S8962, LM4F120
-// Simple device driver for the UART.
+// Simple device driver for the UART.  This version of the UART
+// driver uses UART1 instead of UART0 and has fewer character
+// I/O functions compared to the example project UART_4F120.
 // Daniel Valvano
-// June 17, 2013
+// August 1, 2013
+// Modified by EE345L students Charlie Gough && Matt Hawk
+// Modified by EE345M students Agustinus Darmawan && Mingjie Qiu
 
-/* This example accompanies the books
-  "Embedded Systems: Introduction to ARM Cortex M Microcontrollers",
-  ISBN: 978-1469998749, Jonathan Valvano, copyright (c) 2013
-
-"Embedded Systems: Real Time Interfacing to ARM Cortex M Microcontrollers",
+/* This example accompanies the book
+   "Embedded Systems: Real Time Interfacing to Arm Cortex M Microcontrollers",
    ISBN: 978-1463590154, Jonathan Valvano, copyright (c) 2013
- 
+   Program 4.12, Section 4.9.4, Figures 4.26 and 4.40
+
  Copyright 2013 by Jonathan W. Valvano, valvano@mail.utexas.edu
     You may use, edit, run or distribute this file
     as long as the above copyright notice remains
@@ -23,11 +25,10 @@
  http://users.ece.utexas.edu/~valvano/
  */
 
-// U0Rx (VCP receive) connected to PA0
-// U0Tx (VCP transmit) connected to PA1
+// U1Rx connected to PC4
+// U1Tx connected to PC5
 
-#include "UARTIO.h"
-#include <stdio.h>
+#include "UART.h"
 
 #define GPIO_PORTC_AFSEL_R      (*((volatile unsigned long *)0x40006420))
 #define GPIO_PORTC_DEN_R        (*((volatile unsigned long *)0x4000651C))
@@ -54,7 +55,7 @@
 // 8 bit word length, no parity bits, one stop bit, FIFOs enabled
 // Input: none
 // Output: none
-void UART_Init(void){
+void UART1_Init(void){
   SYSCTL_RCGC1_R |= SYSCTL_RCGC1_UART1; // activate UART1
   SYSCTL_RCGC2_R |= SYSCTL_RCGC2_GPIOC; // activate port C
   UART1_CTL_R &= ~UART_CTL_UARTEN;      // disable UART
@@ -74,41 +75,30 @@ void UART_Init(void){
 // Wait for new serial port input
 // Input: none
 // Output: ASCII code for key typed
-unsigned char UART_InChar(void){
+unsigned char UART1_InChar(void){
   while((UART1_FR_R&UART_FR_RXFE) != 0);
   return((unsigned char)(UART1_DR_R&0xFF));
 }
+
+//------------UART_InCharNonBlocking------------
+// Get oldest serial port input and return immediately
+// if there is no data.
+// Input: none
+// Output: ASCII code for key typed or 0 if no character
+unsigned char UART1_InCharNonBlocking(void){
+  if((UART1_FR_R&UART_FR_RXFE) == 0){
+    return((unsigned char)(UART1_DR_R&0xFF));
+  } else{
+    return 0;
+  }
+}
+
 //------------UART_OutChar------------
 // Output 8-bit to serial port
 // Input: letter is an 8-bit ASCII character to be transferred
 // Output: none
-void UART_OutChar(unsigned char data){
+void UART1_OutChar(unsigned char data){
   while((UART1_FR_R&UART_FR_TXFF) != 0);
   UART1_DR_R = data;
-}
-
-
-
-// Print a character to OLED.
-int fputc(int ch, FILE *f){
-  if((ch == 10) || (ch == 13) || (ch == 27)){
-    UART_OutChar(13);
-    UART_OutChar(10);
-    return 1;
-  }
-  UART_OutChar(ch);
-  return 1;
-}
-// No input from UART, always return data.
-int fgetc (FILE *f){
-	char ch;
-	ch = UART_InChar();
-	UART_OutChar(ch);
-  return ch;
-}
-// Function called when file error occurs.
-int ferror(FILE *f){
-  /* Your implementation of ferror */
-  return EOF;
 }
 

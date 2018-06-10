@@ -52,3 +52,36 @@ void TExaS_Init(enum DisplayType display);
 // Inputs:  none
 // Outputs: none
 void TExaS_Stop(void);
+
+
+
+
+//------------UART0_Init------------
+// Initialize the UART for 115,200 baud rate (assuming 80 MHz UART clock),
+// 8 bit word length, no parity bits, one stop bit, FIFOs enabled
+// Input: none
+// Output: none
+void UART0_Init(void);
+
+//------------UART0_InChar------------
+// Wait for new serial port input
+// Input: none
+// Output: ASCII code for key typed
+unsigned char UART0_InChar(void);
+//------------UART0_InCharNonBlocking------------
+// look for new serial port input
+// Input: none
+// Output: ASCII code for key typed
+//         0 if no key ready
+unsigned char UART0_InCharNonBlocking(void);
+//------------UART0_OutChar------------
+// Output 8-bit to serial port
+// Input: letter is an 8-bit ASCII character to be transferred
+// Output: none
+void UART0_OutChar(unsigned char data);
+//------------UART0_OutCharNonBlock------------
+// Output 8-bit to serial port, do not wait
+// Input: letter is an 8-bit ASCII character to be transferred
+// Output: none
+void UART0_OutCharNonBlock(unsigned char data);
+
